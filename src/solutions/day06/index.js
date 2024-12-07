@@ -75,8 +75,107 @@ const part1 = (input) => {
     return Object.keys(visited).length
 }
 
+const addMarkers = (input, markers) => {
+    const newMat = []
+    for (let i = 0; i < input.length; i++) {
+        const row = []
+        for (let j = 0; j < input[i].length; j++) {
+            const marker = markers[nodeToString([i,j])]
+            row.push(marker || input[i][j])
+        }
+
+        newMat.push(row)
+    }
+
+    return newMat
+}
+
+const matrixToString = (mat) => {
+    return mat.map(row => row.join('')).join('\n')
+}
+
+const getVisited = (input) => {
+    const rows = input.length
+    const columns = input[0].length
+    let current = findSrc(input)
+    // 0 - 0, 1 - 90, 2 - 180, 3 - 270
+
+    let direction = 0
+    const visited = {}
+
+    const isBlocked = (node, direction, rows, columns) => {
+        const nextNode = nextOnDirection(node, direction)
+
+        return isInRange(nextNode, rows, columns) && input[nextNode[0]][nextNode[1]] === '#'
+    }
+
+    while (isInRange(current, rows, columns)) {
+        visited[nodeToString(current)] = true
+        while(isBlocked(current, direction, rows, columns)) {
+            direction = direction === 3 ? 0 : direction + 1
+        }
+
+        current = nextOnDirection(current, direction)
+    }
+    return visited
+}
+
+const isLoop = (input, dest) => {
+    const rows = input.length
+    const columns = input[0].length
+    let current = findSrc(input)
+    // 0 - 0, 1 - 90, 2 - 180, 3 - 270
+
+    let direction = 0
+    // const visited = {}
+    const visitedDirection = {}
+
+    const isBlocked = (node, direction, rows, columns) => {
+        const nextNode = nextOnDirection(node, direction)
+
+        return isInRange(nextNode, rows, columns) && input[nextNode[0]][nextNode[1]] === '#'
+    }
+
+    while (isInRange(current, rows, columns)) {
+        const isSecondTime = visitedDirection[nodeToString(current)] && visitedDirection[nodeToString(current)][direction]
+
+        if (isSecondTime) {
+            return true
+        }
+
+        visitedDirection[nodeToString(current)] = visitedDirection[nodeToString(current)] || {}
+        visitedDirection[nodeToString(current)][direction] = true
+        while(isBlocked(current, direction, rows, columns)) {
+            direction = direction === 3 ? 0 : direction + 1
+        }
+
+        current = nextOnDirection(current, direction)
+    }
+    return false
+}
+
 const part2 = (input) => {
-    return _.identity(input)
+    const src = findSrc(input)
+    const srcStr = nodeToString(src)
+    const v1 = getVisited(input)
+
+    let counter = 0
+    let counterLog = 0
+    // console.log('total:',  Object.keys(v1).length)
+    _.forEach(v1, (v, nodeToCheck) => {
+        counterLog++
+        // console.log('check', counterLog, nodeToCheck)
+        if (srcStr === nodeToCheck) {
+            return; // skip source
+        }
+        const newInput = addMarkers(input, {[nodeToCheck]: '#'})
+
+        if (isLoop(newInput, nodeToCheck)) {
+            counter++
+        }
+    })
+
+    return counter
 }
 
 const runPart1Tests = () => testRunner.runTests(part1, part1Tests)
