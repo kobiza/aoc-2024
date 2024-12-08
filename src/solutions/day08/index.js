@@ -4,7 +4,7 @@ import example from './example'
 import {part1Tests, part2Tests} from './testsData'
 import testRunner from "../../utils/testRunner";
 
-const inputParser = (input) => input.split('\n').map(row => row.split(''))
+const inputParser = (input) => input.split('\n').filter(v => v).map(row => row.split(''))
 
 const nodeToString = ([i,j]) => `${i},${j}`
 
